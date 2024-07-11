@@ -120,28 +120,7 @@ pagination: ref({
   rowsPerPage: 1000,
 });
 const loading1 = ref(false);
-//  const pacientRow = computed(() => pacient.name + ' ' + pacient.age + ' ' + pacient.sex + ' ' + pacient.address)
-function pacientRow(pacient) {
-  return (
-    pacient.PacientID +
-    " " +
-    pacient.name +
-    " " +
-    pacient.age +
-    " " +
-    pacient.sex +
-    " " +
-    pacient.address
-  );
-}
-function studyRow(study) {
-  return (
-    study.StudyID + " " + study.PacientID + " " + study.Date + " " + study.State
-  );
-}
-function detailsRow(detail) {
-  return detail.DetailsID + " " + detail.StudyID + " " + detail.Description;
-}
+
 
 const selectedPacient = ref(null);
 const selectedStudy = ref(null);
