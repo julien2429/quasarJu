@@ -132,11 +132,14 @@ const filteredPacients = computed(() =>
     (pacient) =>
       {
         console.log(pacient)
-         return (pacient.name.toLowerCase().includes(filter.name) || filter.name === "") &&
-          (pacient.PacientID.toString().includes(filter.PacientID) || filter.PacientID === "") &&
-          (pacient.age.toString().includes(filter.age) || filter.age === "") &&
-          (pacient.sex.toLowerCase().includes(filter.sex) || filter.sex === "") &&
-          (pacient.address.toLowerCase().includes(filter.address) || filter.address === "")
+        var state=true
+         for(const key in pacient){
+          if( typeof pacient[key] === 'number')
+            state= state && (pacient[key].toString().includes(filter[key]) || filter[key] === "")
+          else
+            state= state && (pacient[key].toLowerCase().includes(filter[key]) || filter[key] === "")
+          }
+          return state
       }
 ));
 
