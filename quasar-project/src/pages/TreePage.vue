@@ -15,6 +15,7 @@
               class="my-sticky-dynamic"
               flat
               bordered
+              :columns_filter="true"
               title="Pacients"
               :rows="filteredPacients"
               :columns="columns1"
@@ -32,19 +33,20 @@
                 }
               "
             >
-              <template v-slot:top-right>
-                <q-input
-                  borderless
-                  dense
-                  debounce="300"
-                  v-model="filter"
-                  placeholder="Search"
-                >
-                  <template v-slot:append>
-                    <q-icon name="search"></q-icon>
-                  </template>
-                </q-input>
-              </template>
+  
+                <template v-slot:header="slotProps">
+                  <q-tr :props="slotProps">
+                    <q-th v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
+                      {{ col.label }}
+                      <q-input v-model="filter[col.name]" @click.stop > 
+                        <template v-slot:append>
+                           <q-icon name="search"></q-icon>
+                        </template>
+                      </q-input>
+                        
+                    </q-th>
+                  </q-tr>
+                </template>
             </q-table>
           </template>
 
@@ -52,10 +54,6 @@
             <q-splitter v-model="insideModel" horizontal>
               <!-- right up splitter -->
               <template v-slot:before>
-                <!-- <div class="q-pa-md" style="display: flex; flex-direction: column;">
-            <div class="text-h4 q-mb-md">Node 1</div>
-            <q-btn @click="selectedStudy=filteredStudy.StudyID" v-for="filteredStudy in filteredStudies" :key="filteredStudy.StudyID" class="" :label="studyRow(filteredStudy)" color="black" > </q-btn>
-            </div> -->
 
                 <q-table
                 style="height: 100%;"
@@ -81,17 +79,12 @@
               </template>
               <!-- right down splitter -->
               <template v-slot:after>
-                <!-- <div class="q-pa-md" style="display: flex; flex-direction: column;">
-            <div class="text-h4 q-mb-md">Node 2</div>
-            <q-btn  v-for="filteredDetail in filteredDetails" :key="filteredDetail.DetailsID" class="" :label="detailsRow(filteredDetail)" color="black" > </q-btn>
-          </div> -->
-
                 <q-table
                 style="height: 100%;"
                   class="my-sticky-dynamic"
                   flat
                   bordered
-                  title="Studies"
+                  title="Details"
                   :rows="filteredDetails"
                   :loading="loading3"
                   row-key="DetailsID"
@@ -112,10 +105,19 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 const splitterModel = ref(50); // start at 50%
 const insideModel = ref(50); // start at 50%
-const filter = ref("");
+const filter = reactive({
+  PacientID: "",
+  name: "",
+  age: "",
+  sex:"",
+  address: "",
+})
+// const filter = reactive({
+
+// })
 pagination: ref({
   rowsPerPage: 1000,
 });
@@ -128,9 +130,15 @@ const selectedStudy = ref(null);
 const filteredPacients = computed(() =>
   pacients.filter(
     (pacient) =>
-      pacient.name.toLowerCase().includes(filter.value) || filter.value === "",
-  ),
-);
+      {
+        console.log(pacient)
+         return (pacient.name.toLowerCase().includes(filter.name) || filter.name === "") &&
+          (pacient.PacientID.toString().includes(filter.PacientID) || filter.PacientID === "") &&
+          (pacient.age.toString().includes(filter.age) || filter.age === "") &&
+          (pacient.sex.toLowerCase().includes(filter.sex) || filter.sex === "") &&
+          (pacient.address.toLowerCase().includes(filter.address) || filter.address === "")
+      }
+));
 
 const filteredStudies = computed(() =>
   studies.filter((study) => study.PacientID === selectedPacient.value),
@@ -144,15 +152,6 @@ watch(
   () => selectedPacient.value,
   () => {
     selectedStudy.value = null;
-  },
-);
-
-watch(
-  () => selectedStudy.value,
-  () => {
-    console.log(selectedStudy.value);
-    console.log(filteredDetails);
-    console.log(filteredDetails.value);
   },
 );
 
@@ -265,7 +264,7 @@ const details = [
 ];
 
 const columns1 = [
-  { name: "PacientID", label: "PacientID", field: "PacientID", sortable: true },
+  { name: "PacientID", label: "PacientID", field: "PacientID" ,align: "center", sortable: true },
   {
     name: "name",
     label: "Name",
