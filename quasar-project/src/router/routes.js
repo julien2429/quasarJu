@@ -4,9 +4,11 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') ,
-        path: '/tree', component: () => import('pages/TreePage.vue'),
-      }
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'tree', component: () => import('pages/TreePage.vue')},
+      {path: 'emitter', component: () => import('pages/ConsoleEmitter.vue')},
+      {path: 'receiver', component: () => import('pages/ConsoleReceiver.vue')}
+           
     ]
   },
 
