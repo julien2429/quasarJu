@@ -7,18 +7,24 @@ const routes = [
       { path: '', component: () => import('pages/IndexPage.vue') },
       { path: 'tree', component: () => import('pages/TreePage.vue')},
       {path: 'emitter', component: () => import('pages/ConsoleEmitter.vue')},
-      {path: 'receiver', component: () => import('pages/ConsoleReceiver.vue')}
+      {path:'settings', component: () => import('pages/settingsPage.vue')}
            
     ]
+
+
   },
+  {
+    path: '/console',
+    component: () => import('pages/ConsoleReceiver.vue')
+  } ,
 
   // // Always leave this as last one,
   // // but you can also remove it
-  // {
+  {
    
-  //   path: '/:catchAll(.*)*',
-  //   component: () => import('pages/ErrorNotFound.vue')
-  // }
+    path: '/:catchAll(.*)*',
+    component: () => import('pages/ErrorNotFound.vue')
+  }
 ]
 
 export default routes
