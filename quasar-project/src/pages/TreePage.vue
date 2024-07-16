@@ -11,7 +11,14 @@
             :loading="loading1"
             @row-click="
               (evt, row, index) => {
-                selectedPacient = row.DcmPatientId;
+                if(selectedPacient!==row.DcmPatientId)
+                {
+                    selectedPacient = row.DcmPatientId;
+                    filteredStudies = [];
+                    filteredDetails = [];
+                    
+                } 
+                
                 fetchStudies();
               }
             "
