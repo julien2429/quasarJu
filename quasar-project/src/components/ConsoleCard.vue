@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 export default {
   props: ['passedMessages'],
   data() {

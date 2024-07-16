@@ -7,10 +7,6 @@ https://quasar.dev/vue-components/dialog#example--sizing-examples
     <div class="q-pa-md q-gutter-sm">
 
       <q-btn label="Medium" color="primary" @click="medium = true"></q-btn>
-
-
-
-
       <q-dialog v-model="medium">
         <q-card style="width: 900px; max-width: 80vw">
           <q-card-section style="display: flex; justify-content: space-between">
@@ -45,19 +41,17 @@ https://quasar.dev/vue-components/dialog#example--sizing-examples
 import { symSharpOpenInNew } from "@quasar/extras/material-symbols-sharp";
 import { ref } from "vue";
 import ConsoleCard from "src/components/ConsoleCard.vue";
-import { route } from "quasar/wrappers";
 import { useRouter } from 'vue-router'
 let { resolve } = useRouter ()
 let { href } = resolve ({ name: 'console' })
 
-let link = "javascript:window.open('"+href+ "','mypopuptitle','width=1280px,height=720px')";
 const medium = ref(false);
 const messages = ref([])
 
 function openTab() {
   localStorage.setItem('console', JSON.stringify(messages.value))
   console.log(href)
-  window.open(href,'mypopuptitle','width=1280px,height=720px');
-  this.medium = false;
+   window.open(href,'mypopuptitle','width=1280px,height=720px');
+   medium.value = false;
 }
 </script>

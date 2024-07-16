@@ -1,18 +1,13 @@
 <template>
-
   <q-layout view="lHh Lpr lFf">
-    <!-- <div class="q-pa-md q-gutter-sm"> -->
       <div style="height: 100vh">
         <ConsoleCard v-model:passedMessages = "passedMessages" />
       </div>
-  
-    <!-- </div> -->
   </q-layout>
-
 </template>
+
 <script setup>
 import { onBeforeMount, onMounted } from 'vue';
-import { ref } from 'vue';
 import ConsoleCard from '../components/ConsoleCard.vue'
 let passedMessages = null
 
