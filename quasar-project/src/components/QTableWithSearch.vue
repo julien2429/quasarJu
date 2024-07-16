@@ -8,13 +8,13 @@
               :rows="filteredRows"
               :loading="props.loading"
               separator="cell"
-
+              class="my-sticky-virtscroll-table"
              
             >
            
-                <template v-slot:header="slotProps">
-                  <q-tr :props="slotProps">
-                    <q-th  v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
+                <template  v-slot:header="slotProps">
+                  <q-tr  :props="slotProps">
+                    <q-th   v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
                      
                       <q-btn @click.stop  flat  ><q-icon name="search"></q-icon>
                       <q-menu >
@@ -84,4 +84,33 @@ watch( toShow, (val) => {
   transform: translateX(10px);
   opacity: 0;
 }
+
+.my-sticky-virtscroll-table:deep {
+
+  /* height or max-height is important */
+  height: calc(100vh - 150px);
+
+  .q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th /* bg color is important for th; just specify one */ {
+    background-color: #fff;
+  }
+
+  thead tr th {
+    position: sticky;
+    z-index: 1;
+  }
+
+  /* this will be the loading indicator */
+  thead tr:last-child th {
+    /* height of all previous header rows */
+    top: 48px;
+  }
+
+  thead tr:first-child th {
+    top: 0;
+  }
+}
+
+
 </style>
