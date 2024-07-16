@@ -2,19 +2,13 @@
     <q-table
               bordered
               style="height: 100%;"
-              :columns_filter="true"
+
               :title="props.title"
               :columns="columns"
               :rows="filteredRows"
               :loading="props.loading"
-              row-key="PacientID"
-              virtual-scroll
               separator="cell"
-              :virtual-scroll-item-size="48"
-              :virtual-scroll-sticky-size-start="48"
-              :pagination="pagination"
-              :rows-per-page-options="[0]"
-              @virtual-scroll="onScroll"
+
              
             >
            
@@ -23,8 +17,6 @@
                     <q-th  v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
                      
                       <q-btn @click.stop  flat  ><q-icon name="search"></q-icon>
-                     
-                     
                       <q-menu >
                         <q-input style="padding-inline: 1em;"   dense  v-model="filter[col.name]" @click.stop > 
                         </q-input>
@@ -39,7 +31,7 @@
 
 <script setup>
 import { computed,reactive, watch } from "vue";
- const props = defineProps(['title','rows', 'loading', 'pagination'])
+ const props = defineProps(['title','rows', 'loading'])
  const filter = reactive({
   
 })
@@ -61,13 +53,11 @@ const toShow =reactive({})
   props.rows.filter(
     (row) =>
       {
-
         console.log(row)
         var state=true
          for(const key in row){
-          console.log( filter[key] )
           if( typeof row[key] === 'number')
-            state= state && (row[key].toString().includes(filter[key]) || filter[key] === "" || filter[key] === undefined)
+            state= state && (filter[key] === "" || filter[key] === undefined || row[key].toString().includes(filter[key])  )
           else
             state= state && ( filter[key] === "" || filter[key] === undefined || row[key].toLowerCase().includes(filter[key].toLowerCase()))
           }
