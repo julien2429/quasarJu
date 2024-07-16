@@ -16,12 +16,12 @@
                   <q-tr  :props="slotProps">
                     <q-th   v-for="col in slotProps.cols" :key="col.name" :props="slotProps">
                      
-                      <q-btn @click.stop  flat  ><q-icon name="search"></q-icon>
+                      <q-btn @click.stop  flat :style="filter[col.name] ?  'background-color: #D3D3D3': 'background-color: #ffffff'" ><q-icon name="search"></q-icon>
                       <q-menu >
                         <q-input style="padding-inline: 1em;"   dense  v-model="filter[col.name]" @click.stop > 
                         </q-input>
                       </q-menu>   
-                    </q-btn>
+                    </q-btn  >
                     {{ col.label }}
                     </q-th>
                   </q-tr>
@@ -34,7 +34,10 @@ import { computed,reactive, watch } from "vue";
  const props = defineProps(['title','rows', 'loading'])
  const filter = reactive({
   
-})
+});
+
+
+
 
 const columns = computed(()=>{
   const cols = []
@@ -45,7 +48,7 @@ const columns = computed(()=>{
   }
   return cols
 
-})
+});
 
 
 const toShow =reactive({})
@@ -53,21 +56,17 @@ const toShow =reactive({})
   props.rows.filter(
     (row) =>
       {
-        console.log(row)
-        var state=true
+        var state=true;
          for(const key in row){
           if( typeof row[key] === 'number')
             state= state && (filter[key] === "" || filter[key] === undefined || row[key].toString().includes(filter[key])  )
           else
             state= state && ( filter[key] === "" || filter[key] === undefined || row[key].toLowerCase().includes(filter[key].toLowerCase()))
           }
-          return state
+          return state;
       }
 ));
 
-watch( toShow, (val) => {
-  console.log(val)
-})
 </script>
 
 <style scoped>
