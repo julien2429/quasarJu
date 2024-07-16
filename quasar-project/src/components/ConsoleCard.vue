@@ -92,12 +92,13 @@
 </template>
 
 <script>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 export default {
+  props: ['passedMessages'],
   data() {
     return {
       goDown: true,
-
+      start: false,
       scrollArea: ref(null),
       downButtonVisible: false,
       thumbStyle: {
@@ -115,6 +116,7 @@ export default {
         width: "9px",
         opacity: 0.2,
       },
+
       messages: ref([]),
       filters: reactive({
         error: true,
@@ -135,7 +137,11 @@ export default {
       },
     };
   },
-  beforeMount() {
+  mounted() {
+    this.messages = this.passedMessages;
+    this.refreshData()
+  },
+  created() {
     this.socket = new WebSocket("ws://127.0.0.1:7890/EchoAll");
     this.socket.onmessage = (event) => {
       console.log(event.data);
@@ -144,8 +150,17 @@ export default {
 
       this.messages.push(dataParsed);
     };
+    
   },
+
   methods: {
+    refreshData() {
+      this.textArea = "";
+      this.textLines = [];
+      this.messages.forEach((message) => {
+        this.parseMessage(message);
+      });
+    },
     scrollEvent(info) {
       if (this.downButtonVisible) {
       } else {

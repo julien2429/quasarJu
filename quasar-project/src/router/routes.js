@@ -15,6 +15,7 @@ const routes = [
   },
   {
     path: '/console',
+    name: 'console',
     component: () => import('pages/ConsoleReceiver.vue')
   } ,
 

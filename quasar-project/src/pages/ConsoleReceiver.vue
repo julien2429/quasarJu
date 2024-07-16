@@ -3,7 +3,7 @@
   <q-layout view="lHh Lpr lFf">
     <!-- <div class="q-pa-md q-gutter-sm"> -->
       <div style="height: 100vh">
-        <ConsoleCard />
+        <ConsoleCard v-model:passedMessages = "passedMessages" />
       </div>
   
     <!-- </div> -->
@@ -11,7 +11,17 @@
 
 </template>
 <script setup>
+import { onBeforeMount, onMounted } from 'vue';
+import { ref } from 'vue';
 import ConsoleCard from '../components/ConsoleCard.vue'
+let passedMessages = null
+
+onBeforeMount(() => {
+  passedMessages = localStorage.getItem('console') ? JSON.parse(localStorage.getItem('console')) : []
+  if (passedMessages) localStorage.removeItem('console');
+  console.log(passedMessages)
+  
+})
 </script>
 
 <style scoped>
