@@ -92,10 +92,35 @@
 </template>
 
 <script setup>
-import { onBeforeMount, onMounted, reactive, ref, watch } from "vue";
+import { onBeforeMount, reactive, ref, watch } from "vue";
 
+//// DATA RELATED VARIABLES
+let messages = defineModel("messages");
 let scrollArea = ref(null);
 let downButtonVisible = false;
+let textLines = ref([]);
+///////////////////////////
+
+
+//// FILTER RELATED VARIABLES
+let filters = reactive({
+  error: true,
+  warning: true,
+  info: true,
+  ok: true,
+  searchFilter: "",
+});
+//////////////////////////
+
+
+//// CSS RELATED VARIABLES
+let statusDict = {
+  error: "color: red",
+  warning: "color: orange",
+  info: "color: cyan",
+  ok: "color: green",
+};
+
 let thumbStyle = {
   right: "4px",
   borderRadius: "5px",
@@ -111,36 +136,21 @@ let barStyle = {
   width: "9px",
   opacity: 0.2,
 };
-let messages = defineModel("messages");
+/////////////////////////////
 
-let filters = reactive({
-  error: true,
-  warning: true,
-  info: true,
-  ok: true,
-  searchFilter: "",
-});
-let statusDict = {
-  error: "color: red",
-  warning: "color: orange",
-  info: "color: cyan",
-  ok: "color: green",
-};
-let textLines = ref([]);
 
 onBeforeMount(() => {
+  refreshData();///need to refresh data on mount
 
-  console.log("messages -> " ,messages.value);
-  refreshData();
+  //// WEBSOCKET RELATED CODE
   let socket = new WebSocket("ws://192.168.0.240:7890/EchoAll");
-  // let socket = new WebSocket("wss://192.168.0.218:7053/api/ws");
   socket.onmessage = (event) => {
     console.log(event.data);
     let dataParsed = JSON.parse(event.data);
     parseMessage(dataParsed);
-
     messages.value.push(dataParsed);
   };
+  //////////////////////////
 });
 
 function refreshData() {
@@ -149,17 +159,25 @@ function refreshData() {
   });
 }
 
+//// SETS SCROLL TO BOTTOM OF THE CONSOLE
 function scrollEvent(info) {
   if (downButtonVisible) {
   } else {
     info.ref.setScrollPercentage("vertical", 1);
   }
 }
+//////////////////////////////
 
+
+//// CLEAR DATA FUNCTION
 function clearData() {
   textLines.value = [];
   messages.value = [];
 }
+//////////////////////////////
+
+
+//// FILTER THE MESSAGES
 function parseMessage(message) {
   if (
     ((filters.error && message.status === "error") ||
@@ -177,6 +195,9 @@ function parseMessage(message) {
     textLines.value.push(line);
   }
 }
+//////////////////////////////
+
+//// WATCHES THE FILTERS
 watch(
   () => filters,
   (filters) => {
@@ -190,6 +211,7 @@ watch(
     }
   },
 );
+//////////////////////////////
 </script>
 
 <style scoped>
@@ -232,4 +254,5 @@ watch(
 .bottomBar {
   width: 100%;
 }
+
 </style>

@@ -5,9 +5,9 @@ https://quasar.dev/vue-components/dialog#example--sizing-examples
 <template>
   <div id="q-app" style="min-height: 100vh">
     <div class="q-pa-md q-gutter-sm">
-      <q-btn label="Medium" color="primary" @click="medium = true"></q-btn>
+      <q-btn label="Medium" color="primary" @click="showDialog = true"></q-btn>
 
-      <q-dialog v-model="medium">
+      <q-dialog v-model="showDialog">
         <q-card style="width: 900px; max-width: 80vw">
           <q-card-section style="display: flex; justify-content: space-between">
             <div class="text-h6">Medium</div>
@@ -36,20 +36,15 @@ import { useRouter } from "vue-router";
 let { resolve } = useRouter();
 let { href } = resolve({ name: "console" });
 
-const medium = ref(false);
+const showDialog = ref(false);
 
 const messages = ref([]);
 
 
 function openTab() {
-  console.log(messages.value);
-
-
-
   localStorage.setItem("console", JSON.stringify(messages.value));
-  console.log(href);
   window.open(href, "mypopuptitle", "width=1280px,height=720px");
-  medium.value = false;
+  showDialog.value = false;
   messages.value = [];
 }
 </script>
