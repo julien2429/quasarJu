@@ -93,9 +93,7 @@
 
 <script setup>
 import { onBeforeMount, onMounted, reactive, ref, watch } from "vue";
-let passedMessages = [];
-let goDown = true;
-let start = false;
+
 let scrollArea = ref(null);
 let downButtonVisible = false;
 let thumbStyle = {
@@ -113,8 +111,8 @@ let barStyle = {
   width: "9px",
   opacity: 0.2,
 };
+let messages = defineModel("messages");
 
-let messages = ref([]);
 let filters = reactive({
   error: true,
   warning: true,
@@ -122,24 +120,20 @@ let filters = reactive({
   ok: true,
   searchFilter: "",
 });
-let savedMessages = [];
-let textLines = ref([]);
-let socket = null;
-let textArea = "";
 let statusDict = {
   error: "color: red",
   warning: "color: orange",
   info: "color: cyan",
   ok: "color: green",
 };
-
-onMounted(() => {
-  messages.value = passedMessages;
-  refreshData();
-});
+let textLines = ref([]);
 
 onBeforeMount(() => {
-  let socket = new WebSocket("ws://127.0.0.1:7890/EchoAll");
+
+  console.log("messages -> " ,messages.value);
+  refreshData();
+  let socket = new WebSocket("ws://192.168.0.240:7890/EchoAll");
+  // let socket = new WebSocket("wss://192.168.0.218:7053/api/ws");
   socket.onmessage = (event) => {
     console.log(event.data);
     let dataParsed = JSON.parse(event.data);
@@ -150,8 +144,6 @@ onBeforeMount(() => {
 });
 
 function refreshData() {
-  textArea = "";
-  textLines.value = [];
   messages.value.forEach((message) => {
     parseMessage(message);
   });
@@ -163,8 +155,8 @@ function scrollEvent(info) {
     info.ref.setScrollPercentage("vertical", 1);
   }
 }
+
 function clearData() {
-  textArea = "";
   textLines.value = [];
   messages.value = [];
 }
@@ -188,7 +180,6 @@ function parseMessage(message) {
 watch(
   () => filters,
   (filters) => {
-    textArea = "";
     textLines.value = [];
     messages.value.forEach((message) => {
       parseMessage(message);
