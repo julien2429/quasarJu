@@ -5,7 +5,7 @@
       <q-splitter
         v-model="splitterModel"
         style="height: 100%"
-        :horizontal="smallScreen"
+        v-model:horizontal="smallScreen"
       >
         <template v-slot:before>
           <q-table-with-search
@@ -59,11 +59,11 @@
 
 <script setup>
 import QTableWithSearch from "src/components/QTableWithSearch.vue";
-import { onMounted, ref, watch } from "vue";
-const splitterModel = ref(window.screen.width <= 600 ? 33 : 50); // start at 50%
+import { onMounted, onUnmounted, ref, watch } from "vue";
+const splitterModel = ref(window.innerWidth <= 600 ? 33 : 50); // start at 50%
 const insideModel = ref(50); // start at 50%
 
-const smallScreen = ref(window.screen.width <= 600 ? true : false);
+const smallScreen = ref(window.innerWidth <= 600 ? true : false);
 
 const loading1 = ref(false);
 const loading2 = ref(false);
@@ -81,6 +81,10 @@ watch(
     selectedStudy.value = null;
   },
 );
+
+function handleWindowSizeChange() {
+  smallScreen.value = window.innerWidth <= 600 ? true : false;
+}
 
 var pacientsFetched = [];
 const pacients = [
@@ -6875,7 +6879,12 @@ const details = [
 ];
 
 onMounted(() => {
+  window.addEventListener("resize", handleWindowSizeChange);
   fetchPatients();
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", handleWindowSizeChange);
 });
 
 async function fetchPatients() {
