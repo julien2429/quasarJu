@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, watch } from "vue";
+import { computed, reactive } from "vue";
 const props = defineProps(["title", "rows", "loading"]);
 const filter = reactive({});
 
@@ -63,7 +63,6 @@ const columns = computed(() => {
   return cols;
 });
 
-const toShow = reactive({});
 const filteredRows = computed(() =>
   props.rows.filter((row) => {
     var state = true;

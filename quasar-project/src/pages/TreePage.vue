@@ -2,7 +2,11 @@
   <q-page>
     <div style="height: 95vh">
       <!-- left splitter -->
-      <q-splitter v-model="splitterModel" style="height: 100%">
+      <q-splitter
+        v-model="splitterModel"
+        style="height: 100%"
+        :horizontal="smallScreen"
+      >
         <template v-slot:before>
           <q-table-with-search
             title="Pacients"
@@ -56,8 +60,10 @@
 <script setup>
 import QTableWithSearch from "src/components/QTableWithSearch.vue";
 import { onMounted, ref, watch } from "vue";
-const splitterModel = ref(50); // start at 50%
+const splitterModel = ref(window.screen.width <= 600 ? 33 : 50); // start at 50%
 const insideModel = ref(50); // start at 50%
+
+const smallScreen = ref(window.screen.width <= 600 ? true : false);
 
 const loading1 = ref(false);
 const loading2 = ref(false);
