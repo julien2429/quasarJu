@@ -4,7 +4,7 @@
       ref="scrollArea"
       class="console"
       @scroll="scrollEvent"
-      :thumb-style
+      :thumb-style="thumbStyle"
       :bar-style="barStyle"
     >
       <div
