@@ -17,7 +17,7 @@ export default {
     }
   },
   beforeMount() {
-    this.socket = new WebSocket('ws://192.168.0.240:7890/EchoAll');
+    this.socket = new WebSocket('wss://192.168.0.218:7053/api/ws');
   },
   watch: {
     start() {

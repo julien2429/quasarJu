@@ -7,8 +7,8 @@ const routes = [
       { path: '', component: () => import('pages/IndexPage.vue') },
       { path: 'tree', component: () => import('pages/TreePage.vue')},
       {path: 'emitter', component: () => import('pages/ConsoleEmitter.vue')},
-      {path:'settings', component: () => import('pages/settingsPage.vue')}
-           
+      {path:'settings', component: () => import('pages/settingsPage.vue')},
+      {path:'test', component: () => import('pages/testM.vue')}    
     ]
 
 
