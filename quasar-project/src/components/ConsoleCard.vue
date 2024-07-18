@@ -101,7 +101,6 @@ let downButtonVisible = false;
 let textLines = ref([]);
 ///////////////////////////
 
-
 //// FILTER RELATED VARIABLES
 let filters = reactive({
   error: true,
@@ -111,7 +110,6 @@ let filters = reactive({
   searchFilter: "",
 });
 //////////////////////////
-
 
 //// CSS RELATED VARIABLES
 let statusDict = {
@@ -138,17 +136,18 @@ let barStyle = {
 };
 /////////////////////////////
 
-
 onBeforeMount(() => {
-  refreshData();///need to refresh data on mount
+  refreshData(); ///need to refresh data on mount
 
   //// WEBSOCKET RELATED CODE
-  let socket = new WebSocket("ws://192.168.0.240:7890/EchoAll");
+  // let socket = new WebSocket("ws://192.168.0.240:7890/EchoAll");
+  let socket = new WebSocket("wss://192.168.0.218:7053/api/ws");
   socket.onmessage = (event) => {
     console.log(event.data);
-    let dataParsed = JSON.parse(event.data);
-    parseMessage(dataParsed);
-    messages.value.push(dataParsed);
+    // let dataParsed = JSON.parse(event.data);
+    // parseMessage(dataParsed);
+    // console.log(dataParsed);
+    // messages.value.push(dataParsed);
   };
   //////////////////////////
 });
@@ -168,14 +167,12 @@ function scrollEvent(info) {
 }
 //////////////////////////////
 
-
 //// CLEAR DATA FUNCTION
 function clearData() {
   textLines.value = [];
   messages.value = [];
 }
 //////////////////////////////
-
 
 //// FILTER THE MESSAGES
 function parseMessage(message) {
@@ -254,5 +251,4 @@ watch(
 .bottomBar {
   width: 100%;
 }
-
 </style>
