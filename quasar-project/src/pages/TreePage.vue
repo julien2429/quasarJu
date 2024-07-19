@@ -1,6 +1,6 @@
 <template>
-  <q-page>
-    <div style="height: 95vh">
+  <q-page :style-fn="myTweak">
+    <div style="height: 100%">
       <!-- left splitter -->
       <q-splitter
         v-model="splitterModel"
@@ -74,6 +74,10 @@ const selectedStudy = ref(null);
 const filteredStudies = ref([]);
 
 const filteredDetails = ref([]);
+
+function myTweak(offset) {
+  return { height: offset ? `calc(100vh - ${offset}px)` : "100vh" };
+}
 
 watch(
   () => selectedPacient.value,
