@@ -12,7 +12,7 @@
     <template v-slot:header="slotProps">
       <q-tr :props="slotProps">
         <q-th
-          style="padding-inline: 1em"
+          style="padding-inline: 1em; background-color: #dadada"
           v-for="col in slotProps.cols"
           :key="col.name"
           :props="slotProps"
@@ -23,8 +23,8 @@
             dense
             :style="
               filter[col.name]
-                ? 'background-color: #D3D3D3'
-                : 'background-color: #ffffff'
+                ? 'background-color: #A7A7A7'
+                : 'background-color: #dadada'
             "
             ><q-icon size="sm" name="search"></q-icon>
             <q-menu>
