@@ -140,14 +140,14 @@ onBeforeMount(() => {
   refreshData(); ///need to refresh data on mount
 
   //// WEBSOCKET RELATED CODE
-  // let socket = new WebSocket("ws://192.168.0.240:7890/EchoAll");
-  let socket = new WebSocket("wss://192.168.0.218:7053/api/ws");
+  let socket = new WebSocket("ws://192.168.0.240:7890/EchoAll");
+  // let socket = new WebSocket("wss://192.168.0.218:7053/api/ws");
   socket.onmessage = (event) => {
     console.log(event.data);
-    // let dataParsed = JSON.parse(event.data);
-    // parseMessage(dataParsed);
-    // console.log(dataParsed);
-    // messages.value.push(dataParsed);
+    let dataParsed = JSON.parse(event.data);
+    parseMessage(dataParsed);
+    console.log(dataParsed);
+    messages.value.push(dataParsed);
   };
   //////////////////////////
 });
