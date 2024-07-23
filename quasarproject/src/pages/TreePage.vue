@@ -1,5 +1,5 @@
 <template>
-  <q-page :style-fn="myTweak">
+  <q-page :style-fn="setQPagetoFull">
     <div style="height: 100%">
       <!-- left splitter -->
       <q-splitter
@@ -75,7 +75,7 @@ const filteredStudies = ref([]);
 
 const filteredDetails = ref([]);
 
-function myTweak(offset) {
+function setQPagetoFull(offset) {
   return { height: offset ? `calc(100vh - ${offset}px)` : "100vh" };
 }
 
@@ -83,7 +83,7 @@ watch(
   () => selectedPacient.value,
   () => {
     selectedStudy.value = null;
-  },
+  }
 );
 
 function handleWindowSizeChange() {
@@ -6905,7 +6905,7 @@ function fetchStudies() {
   filteredDetails.value = [];
   setTimeout(() => {
     filteredStudies.value = studies.filter(
-      (study) => study.PatientId === selectedPacient.value,
+      (study) => study.PatientId === selectedPacient.value
     );
     loading2.value = false;
   }, 1000);
@@ -6915,7 +6915,7 @@ function fetchDetails() {
   filteredDetails.value = [];
   setTimeout(() => {
     (filteredDetails.value = details.filter(
-      (detail) => detail.StudyId === selectedStudy.value,
+      (detail) => detail.StudyId === selectedStudy.value
     )),
       (loading3.value = false);
   }, 1000);
