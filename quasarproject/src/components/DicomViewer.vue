@@ -6,7 +6,7 @@
     @dragover.prevent="handleDragOver"
     @click.middle.prevent
     ref="el"
-    class="full-height"
+    class="full-height full-width"
   ></div>
 </template>
 
@@ -98,9 +98,7 @@ async function createCanvas() {
 
   const renderingEngineId = "myRenderingEngine";
   const renderingEngine = new cornerstone.RenderingEngine(renderingEngineId);
-
   const element = el.value;
-
   const viewportId = "CT_STACK";
   const viewportInput = {
     viewportId: viewportId,
@@ -159,12 +157,12 @@ async function getTags(file) {
 
   let dataset = await dicomParser.explicitDataSetToJS(parsedArray);
   console.log("dataset", dataset);
-  addElementToTagsArray(dataset, 0);
+  addElementToTagsArray(dataset, 0, true, null);
 
   console.log("dicomTags", dicomTags.value);
 }
 
-function addElementToTagsArray(dataset, spaces) {
+function addElementToTagsArray(dataset, spaces, showable, parent) {
   console.log("dataset", dataset);
 
   for (let key of Object.keys(dataset)) {
@@ -176,16 +174,19 @@ function addElementToTagsArray(dataset, spaces) {
       ")";
     if (TAG_DICT[tag]) {
       let row = {
-        tag: "_".repeat(spaces) + tag,
+        tag: tag,
+        epxanded: dataset[key] instanceof Array && dataset[key].length > 0 ? true : false,
         vr: TAG_DICT[tag].vr,
         vm: TAG_DICT[tag].vm,
+        showable: showable,
+        parent: parent,
         description: TAG_DICT[tag].name,
         value: dataset[key] instanceof Array ? [] : dataset[key],
       };
       dicomTags.value.push(row);
       if (dataset[key] instanceof Array) {
         for (let i = 0; i < dataset[key].length; i++) {
-          addElementToTagsArray(dataset[key][i], spaces + 4);
+          addElementToTagsArray(dataset[key][i], spaces + 4, false, tag);
         }
       }
 
