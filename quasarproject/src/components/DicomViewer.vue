@@ -21,12 +21,15 @@ import {
   prefetchMetadataInformation,
 } from "../utils/convertMultiframeImageIds";
 import initDemo from "src/utils/initDemo";
-import dicomParser, { ByteStream } from "dicom-parser";
+import dicomParser from "dicom-parser";
 import { TAG_DICT } from "src/utils/dataDictionary";
+
+const el = ref();
 let viewport;
 const toolGroupId = "myToolGroup";
 let toolGroup;
 
+let dicomTags = defineModel<Array<any>>("dicomTags");
 let file = defineModel("file");
 const firstRender = defineModel("firstRender");
 const {
@@ -44,8 +47,7 @@ onMounted(async () => {
   createCanvas();
 
   if (file.value) {
-    const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file.value);
-    loadAndViewImage(imageId);
+    loadFile(file.value);
   }
 });
 
@@ -53,12 +55,7 @@ watch(
   () => file.value,
   async () => {
     if (file.value != null) {
-      console.log("file", file.value);
-      const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(
-        file.value
-      );
-
-      loadAndViewImage(imageId);
+      loadFile(file.value);
     }
   }
 );
@@ -98,6 +95,7 @@ async function createCanvas() {
     });
     toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
   }
+
   const renderingEngineId = "myRenderingEngine";
   const renderingEngine = new cornerstone.RenderingEngine(renderingEngineId);
 
@@ -112,35 +110,21 @@ async function createCanvas() {
 
   renderingEngine.enableElement(viewportInput);
   viewport = renderingEngine.getViewport(viewportId);
-  if (firstRender.value) {
-    toolGroup.addViewport(viewportId, renderingEngineId);
-  }
+  // if (firstRender.value) {
+  toolGroup.addViewport(viewportId, renderingEngineId);
+  // }
 }
+
 async function onDrop(e) {
   e.preventDefault();
   const files = e.dataTransfer.files;
-  const file = files[0];
+  file.value = files[0];
+  loadFile(file);
+}
 
-  let arrayBuffer = await file.arrayBuffer();
-
-  let parsedArray = await dicomParser.parseDicom(new Uint8Array(arrayBuffer));
-
-  console.log("arrayBuffer", arrayBuffer);
-  console.log("parsedArray", parsedArray);
-
-  let dataset = dicomParser.explicitDataSetToJS(parsedArray);
-
-  for (let key in dataset) {
-    const tag = "(" + key.substring(1, 5) + "," + key.substring(5, 9) + ")";
-    console.log(tag, key);
-    if (TAG_DICT[tag]) {
-      console.log(TAG_DICT[tag].name, dataset[key]);
-    }
-  }
-  console.log("dataset", dataset);
-
+async function loadFile(file) {
+  getTags(file);
   const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
-
   loadAndViewImage(imageId);
 }
 
@@ -155,10 +139,58 @@ async function loadAndViewImage(imageId) {
   const stack = convertMultiframeImageIds([imageId]);
 
   viewport.setStack(stack).then((img) => {
-    const meta = cornerstone.metaData.get("instance", img);
-    console.log("meta", meta);
     viewport.render();
   });
 }
-const el = ref();
+
+async function getTags(file) {
+  dicomTags.value = [];
+  let arrayBuffer = await file.arrayBuffer();
+  var options = {
+    vrCallback(tag) {
+      const formatted = `(${tag.substring(1, 5).toUpperCase()},${tag
+        .substring(5, 9)
+        .toUpperCase()})`;
+      return !!TAG_DICT[formatted] ? TAG_DICT[formatted].vr : undefined;
+    },
+  };
+  let parsedArray = await dicomParser.parseDicom(new Uint8Array(arrayBuffer), options);
+  console.log(parsedArray);
+
+  let dataset = await dicomParser.explicitDataSetToJS(parsedArray);
+  console.log("dataset", dataset);
+  addElementToTagsArray(dataset, 0);
+
+  console.log("dicomTags", dicomTags.value);
+}
+
+function addElementToTagsArray(dataset, spaces) {
+  console.log("dataset", dataset);
+
+  for (let key of Object.keys(dataset)) {
+    const tag =
+      "(" +
+      key.substring(1, 5).toUpperCase() +
+      "," +
+      key.substring(5, 9).toUpperCase() +
+      ")";
+    if (TAG_DICT[tag]) {
+      let row = {
+        tag: "_".repeat(spaces) + tag,
+        vr: TAG_DICT[tag].vr,
+        vm: TAG_DICT[tag].vm,
+        description: TAG_DICT[tag].name,
+        value: dataset[key] instanceof Array ? [] : dataset[key],
+      };
+      dicomTags.value.push(row);
+      if (dataset[key] instanceof Array) {
+        for (let i = 0; i < dataset[key].length; i++) {
+          addElementToTagsArray(dataset[key][i], spaces + 4);
+        }
+      }
+
+      console.log("_".repeat(spaces), TAG_DICT[tag].name, dataset[key]);
+    }
+  }
+}
 </script>
