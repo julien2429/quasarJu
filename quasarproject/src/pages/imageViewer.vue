@@ -9,6 +9,7 @@
                 dense
                 title="Tag Data"
                 :rows="filteredTags"
+                :excludedColumns="excludedColumns"
                 @row-click="
                   (evt, row, index) => {
                     row.showChildren = !row.showChildren;
@@ -64,7 +65,7 @@ let files = ref([]);
 let dicomTags = ref([]);
 let tableTags = ref([]);
 let toolGroup = ref([]);
-
+let excludedColumns = ref(["tag", "showable", "showChildren", "parent"]);
 const filteredTags = computed(() => {
   return dicomTags.value.filter((tag) => tag.showable);
 });
@@ -73,7 +74,7 @@ const firstRender = ref(true);
 const show = ref(true);
 const passedFile = ref(null);
 const splitterModel = ref(50);
-const leftSpliterModel = ref(50);
+const leftSpliterModel = ref(80);
 
 const forceRender = () => {
   show.value = !show.value;

@@ -22,9 +22,7 @@
             flat
             dense
             :style="
-              filter[col.name]
-                ? 'background-color: #A7A7A7'
-                : 'background-color: #dadada'
+              filter[col.name] ? 'background-color: #A7A7A7' : 'background-color: #dadada'
             "
             ><q-icon size="sm" name="search"></q-icon>
             <q-menu>
@@ -46,12 +44,14 @@
 
 <script setup>
 import { computed, reactive } from "vue";
-const props = defineProps(["title", "rows", "loading"]);
+const props = defineProps(["title", "rows", "loading", "excludedColumns"]);
 const filter = reactive({});
 
 const columns = computed(() => {
   const cols = [];
   for (const key in props.rows[0]) {
+    if (props.excludedColumns !== undefined && props.excludedColumns.includes(key))
+      continue;
     cols.push({
       name: key,
       label: key,
@@ -81,7 +81,7 @@ const filteredRows = computed(() =>
             row[key].toLowerCase().includes(filter[key].toLowerCase()));
     }
     return state;
-  }),
+  })
 );
 </script>
 
