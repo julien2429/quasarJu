@@ -11,14 +11,8 @@
                 :rows="filteredTags"
                 @row-click="
                   (evt, row, index) => {
-                    tag = row.tag;
-                    for (let key in dicomTags) {
-                      console.log(dicomTags[key].parent, tag);
-                      if (dicomTags[key].parent === tag) {
-                        console.log(dicomTags[key]);
-                        dicomTags[key].showable = !dicomTags[key].showable;
-                      }
-                    }
+                    row.showChildren = !row.showChildren;
+                    changeShowableState(row.tag, row.showChildren);
                   }
                 "
               >
@@ -112,6 +106,24 @@ function handleFileUpload(file) {
 
 function setQPagetoFull(offset) {
   return { height: offset ? `calc(100vh - ${offset}px)` : "100vh" };
+}
+
+function changeShowableState(tag, showChildren) {
+  if (showChildren) {
+    for (let key in dicomTags.value) {
+      if (dicomTags.value[key].parent === tag) {
+        dicomTags.value[key].showable = true;
+      }
+    }
+  } else {
+    for (let key in dicomTags.value) {
+      if (dicomTags.value[key].parent === tag) {
+        dicomTags.value[key].showable = false;
+        if (dicomTags.value[key].showChildren)
+          changeShowableState(dicomTags.value[key].tag, false);
+      }
+    }
+  }
 }
 
 watch(

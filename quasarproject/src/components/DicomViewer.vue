@@ -163,8 +163,6 @@ async function getTags(file) {
 }
 
 function addElementToTagsArray(dataset, spaces, showable, parent) {
-  console.log("dataset", dataset);
-
   for (let key of Object.keys(dataset)) {
     const tag =
       "(" +
@@ -174,11 +172,15 @@ function addElementToTagsArray(dataset, spaces, showable, parent) {
       ")";
     if (TAG_DICT[tag]) {
       let row = {
-        tag: tag,
-        epxanded: dataset[key] instanceof Array && dataset[key].length > 0 ? true : false,
+        tagName:
+          "_".repeat(spaces) +
+          TAG_DICT[tag].tag +
+          (dataset[key] instanceof Array && dataset[key].length > 0 ? " >" : ""),
+        tag: TAG_DICT[tag].tag,
         vr: TAG_DICT[tag].vr,
         vm: TAG_DICT[tag].vm,
         showable: showable,
+        showChildren: false,
         parent: parent,
         description: TAG_DICT[tag].name,
         value: dataset[key] instanceof Array ? [] : dataset[key],
@@ -189,8 +191,6 @@ function addElementToTagsArray(dataset, spaces, showable, parent) {
           addElementToTagsArray(dataset[key][i], spaces + 4, false, tag);
         }
       }
-
-      console.log("_".repeat(spaces), TAG_DICT[tag].name, dataset[key]);
     }
   }
 }
