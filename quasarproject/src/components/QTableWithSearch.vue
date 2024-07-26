@@ -9,6 +9,32 @@
     separator="cell"
     class="my-sticky-virtscroll-table"
   >
+    <template v-slot:body="props">
+      <q-tr :props="props">
+        <q-td v-for="col in columns" :key="col.name" :props="props">
+          <div v-if="isEditable">
+            {{ props.row[col.name] }}
+            <q-popup-edit
+              v-model="props.row[col.name]"
+              title="Update"
+              buttons
+              persistent
+              v-slot="scope"
+            >
+              <q-input
+                type="number"
+                v-model="scope.value"
+                autofocus
+                hint="Use buttons to close"
+              ></q-input>
+            </q-popup-edit>
+          </div>
+          <div v-else>
+            {{ props.row[col.name] }}
+          </div>
+        </q-td>
+      </q-tr>
+    </template>
     <template v-slot:header="slotProps">
       <q-tr :props="slotProps">
         <q-th
@@ -43,10 +69,10 @@
 </template>
 
 <script setup>
-import { computed, reactive } from "vue";
-const props = defineProps(["title", "rows", "loading", "excludedColumns"]);
+import { computed, onMounted, reactive } from "vue";
+const props = defineProps(["title", "rows", "loading", "excludedColumns", "isEditable"]);
 const filter = reactive({});
-
+const isEditable = props.isEditable;
 const columns = computed(() => {
   const cols = [];
   for (const key in props.rows[0]) {
@@ -83,6 +109,10 @@ const filteredRows = computed(() =>
     return state;
   })
 );
+
+onMounted(() => {
+  console.log("editable ", props.isEditable);
+});
 </script>
 
 <style scoped>

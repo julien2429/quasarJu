@@ -7,6 +7,7 @@
             <div class="full-width full-height">
               <q-table-with-search
                 dense
+                :is-editable="true"
                 title="Tag Data"
                 :rows="filteredTags"
                 :excludedColumns="excludedColumns"
