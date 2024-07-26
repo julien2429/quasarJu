@@ -12,7 +12,7 @@
     <template v-slot:body="props">
       <q-tr :props="props">
         <q-td v-for="col in columns" :key="col.name" :props="props">
-          <div v-if="isEditable">
+          <div v-if="isEditable && rowContains(editableRows, col.name)">
             {{ props.row[col.name] }}
             <q-popup-edit
               v-model="props.row[col.name]"
@@ -70,8 +70,16 @@
 
 <script setup>
 import { computed, onMounted, reactive } from "vue";
-const props = defineProps(["title", "rows", "loading", "excludedColumns", "isEditable"]);
+const props = defineProps([
+  "title",
+  "rows",
+  "loading",
+  "excludedColumns",
+  "isEditable",
+  "editableRows",
+]);
 const filter = reactive({});
+const editableRows = props.editableRows;
 const isEditable = props.isEditable;
 const columns = computed(() => {
   const cols = [];
@@ -89,6 +97,12 @@ const columns = computed(() => {
   return cols;
 });
 
+function rowContains(row, key) {
+  for (const r of row) {
+    if (r === key) return true;
+  }
+  return false;
+}
 const filteredRows = computed(() =>
   props.rows.filter((row) => {
     var state = true;
@@ -109,10 +123,6 @@ const filteredRows = computed(() =>
     return state;
   })
 );
-
-onMounted(() => {
-  console.log("editable ", props.isEditable);
-});
 </script>
 
 <style scoped>
