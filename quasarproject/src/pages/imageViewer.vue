@@ -22,18 +22,6 @@
           </template>
           <template v-slot:after>
             <div class="full-width full-height">
-              <q-file
-                @update:model-value="
-                  (val) => {
-                    files = val;
-                  }
-                "
-                webkitdirectory
-                directory
-                label="Pick files"
-                outlined
-                multiple
-              ></q-file>
               <q-input
                 @update:model-value="
                   (val) => {
@@ -48,11 +36,17 @@
               />
 
               <q-tree
-                v-model:ticked="ticked"
+                ref="treeRef"
+                @update:selected="
+                  async (val) => {
+                    searchForKey(val);
+                  }
+                "
+                v-model:selected="selected"
                 :nodes="tree"
-                tickStrategy="strict"
                 dense
-                node-key="label"
+                node-key="nodeKey"
+                label-key="label"
               ></q-tree>
             </div>
           </template>
@@ -80,20 +74,24 @@ import { computed, ref, watch } from "vue";
 
 //// Variables
 let ticked = ref([]);
+let treeRef = ref();
+let selected = ref([]);
 let files = ref([]);
 let dicomTags = ref([]);
 let tableTags = ref([]);
 let toolGroup = ref([]);
+let tree = ref([]);
 let excludedColumns = ref(["tag", "showable", "showChildren", "parent"]);
-const filteredTags = computed(() => {
-  return dicomTags.value.filter((tag) => tag.showable);
-});
-
 const firstRender = ref(true);
 const show = ref(true);
 const passedFile = ref(null);
 const splitterModel = ref(50);
 const leftSpliterModel = ref(80);
+
+const filteredTags = computed(() => {
+  return dicomTags.value.filter((tag) => tag.showable);
+});
+
 const forceRender = () => {
   show.value = !show.value;
 
@@ -102,8 +100,6 @@ const forceRender = () => {
     show.value = !show.value;
   }, 5);
 };
-
-let tree = ref([]);
 
 //// Watchers
 watch(
@@ -129,6 +125,32 @@ watch(
 );
 
 //// Methods
+
+function searchForKey(key, root = tree.value) {
+  for (let rootKey in root) {
+    if (root[rootKey].nodeKey === key) {
+      handleSelectedBranch(root[rootKey]);
+      return root[rootKey];
+    }
+    if (root[rootKey].children.length > 0) {
+      searchForKey(key, root[rootKey].children);
+    }
+  }
+}
+
+function handleSelectedBranch(branch) {
+  if (branch.label.includes(".dcm")) {
+    handleFileUpload(branch.item);
+  } else {
+    let items = [];
+    for (let i = 0; i < branch.children.length; i++) {
+      if (branch.children[i].label.includes(".dcm")) {
+        items.push(branch.children[i].item);
+      }
+    }
+    handleFileUpload(items);
+  }
+}
 
 function handleFileUpload(file) {
   console.log("file", file);
@@ -161,17 +183,20 @@ function fileToTree() {
   const treeAux = [];
 
   const list = [];
-
+  let uudi = 0;
   console.log("files", files.value);
 
   for (let i = 0; i < files.value.length; i++) {
-    list.push(files.value[i].webkitRelativePath);
+    list.push(files.value[i]);
   }
 
-  const addPath = (path, treeAux) => {
+  const addPath = (file, treeAux) => {
+    let path = file.webkitRelativePath;
     // helper function to create child objects
-    const createChild = (name) => ({
+    const createChild = (name, item = null) => ({
+      nodeKey: uudi++,
       label: name,
+      item: item,
       children: [],
     });
 
@@ -196,13 +221,16 @@ function fileToTree() {
         return child;
       }
 
-      const newChild = createChild(p);
+      let newChild;
+      if (p.includes(".dcm")) newChild = createChild(p, file);
+      else newChild = createChild(p);
+
       current.children.push(newChild);
       return newChild;
     }, treeAux);
   };
 
-  list.forEach((path) => addPath(path, treeAux));
+  list.forEach((file) => addPath(file, treeAux));
 
   console.log(treeAux);
   tree.value = [treeAux];
