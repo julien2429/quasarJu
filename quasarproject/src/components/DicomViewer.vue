@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onUnmounted, ref, watch } from "vue";
 import * as cornerstone from "@cornerstonejs/core";
 import * as cornerstoneTools from "@cornerstonejs/tools";
 import cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
@@ -33,6 +33,12 @@ let tags = [];
 let isFolder = defineModel<Boolean>("isFolder");
 let dicomTags = defineModel<Array<any>>("dicomTags");
 let file = defineModel("file");
+let fileAndImageID = [
+  {
+    file: null,
+    imageId: null,
+  },
+];
 const firstRender = defineModel("firstRender");
 const {
   PanTool,
@@ -47,10 +53,19 @@ const { MouseBindings } = csToolsEnums;
 onMounted(async () => {
   await initDemo();
   createCanvas();
+  imgIds = [];
+  tags = [];
+  console.log("files", file.value, isFolder.value);
   if (file.value != null) {
-    for (let key of Object.keys(file.value)) {
-      loadFile(file.value[key]);
+    if (isFolder.value) {
+      for (let key of Object.keys(file.value[0])) {
+        loadFile(file.value[0][key]);
+      }
+    } else {
+      loadFile(file.value[0]);
     }
+
+    loadAndViewImage();
   }
 });
 
@@ -74,13 +89,24 @@ watch(
   }
 );
 
-async function createCanvas() {
-  if (firstRender.value) {
-    cornerstoneTools.addTool(PanTool);
-    cornerstoneTools.addTool(WindowLevelTool);
-    cornerstoneTools.addTool(StackScrollMouseWheelTool);
-    cornerstoneTools.addTool(ZoomTool);
+onUnmounted(() => {
+  cornerstoneTools.removeTool(PanTool);
+  cornerstoneTools.removeTool(WindowLevelTool);
+  cornerstoneTools.removeTool(StackScrollMouseWheelTool);
+  cornerstoneTools.removeTool(ZoomTool);
 
+  toolGroup = [];
+});
+
+async function createCanvas() {
+  cornerstoneTools.addTool(PanTool);
+  cornerstoneTools.addTool(WindowLevelTool);
+  cornerstoneTools.addTool(StackScrollMouseWheelTool);
+  cornerstoneTools.addTool(ZoomTool);
+
+  if (ToolGroupManager.getToolGroup(toolGroupId)) {
+    toolGroup = ToolGroupManager.getToolGroup(toolGroupId);
+  } else {
     toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
     toolGroup.addTool(WindowLevelTool.toolName);
     toolGroup.addTool(PanTool.toolName);
@@ -109,7 +135,6 @@ async function createCanvas() {
     });
     toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
   }
-
   const renderingEngineId = "myRenderingEngine";
   const renderingEngine = new cornerstone.RenderingEngine(renderingEngineId);
   const element = el.value;
@@ -123,10 +148,6 @@ async function createCanvas() {
   renderingEngine.enableElement(viewportInput);
   viewport = renderingEngine.getViewport(viewportId);
   toolGroup.addViewport(viewportId, renderingEngineId);
-
-  el.value.addEventListener("cornerstonenewimage", function (e) {
-    console.log("new image");
-  });
 }
 
 async function onDrop(e) {
@@ -137,8 +158,8 @@ async function onDrop(e) {
 }
 
 async function loadFile(file) {
-  getTags(file);
   const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
+  fileAndImageID.push({ file: file, imageId: imageId });
   imgIds.push(imageId);
 }
 
@@ -157,14 +178,14 @@ async function loadAndViewImage() {
   viewport.setStack(stack).then((img) => {
     viewport.render();
   });
-}
 
-watch(
-  () => cornerstone.EVENTS.STACK_NEW_IMAGE,
-  () => {
-    console.log("new image");
-  }
-);
+  viewport.element.addEventListener(cornerstone.EVENTS.STACK_NEW_IMAGE, async (e) => {
+    const imageId = e.detail.image.imageId;
+    const file = fileAndImageID.find((item) => item.imageId === imageId).file;
+    await getTags(file);
+    // dicomTags.value = tags;
+  });
+}
 
 async function getTags(file) {
   let tagItems = [];
@@ -185,8 +206,7 @@ async function getTags(file) {
   let dataset = await dicomParser.explicitDataSetToJS(parsedArray);
   console.log("dataset", dataset);
   addElementToTagsArray(tagItems, dataset, 0, true, null);
-
-  tags.push(tagItems);
+  dicomTags.value = tagItems;
 }
 
 function addElementToTagsArray(tagItems, dataset, spaces, showable, parent) {
