@@ -56,6 +56,7 @@
       <template v-slot:after>
         <div v-if="show" class="full-width full-height">
           <dicom-viewer
+            v-model:isFolder="isFolder"
             v-model:toolGroup="toolGroup"
             v-model:dicomTags="dicomTags"
             v-model:first-render="firstRender"
@@ -73,6 +74,7 @@ import DicomViewer from "../components/DicomViewer.vue";
 import { computed, ref, watch } from "vue";
 
 //// Variables
+let isFolder = ref(false);
 let ticked = ref([]);
 let treeRef = ref();
 let selected = ref([]);
@@ -84,9 +86,9 @@ let tree = ref([]);
 let excludedColumns = ref(["tag", "showable", "showChildren", "parent"]);
 const firstRender = ref(true);
 const show = ref(true);
-const passedFile = ref(null);
+const passedFile = ref({});
 const splitterModel = ref(50);
-const leftSpliterModel = ref(80);
+const leftSpliterModel = ref(50);
 
 const filteredTags = computed(() => {
   return dicomTags.value.filter((tag) => tag.showable);
@@ -140,6 +142,7 @@ function searchForKey(key, root = tree.value) {
 
 function handleSelectedBranch(branch) {
   if (branch.label.includes(".dcm")) {
+    isFolder.value = false;
     handleFileUpload(branch.item);
   } else {
     let items = [];
@@ -148,13 +151,15 @@ function handleSelectedBranch(branch) {
         items.push(branch.children[i].item);
       }
     }
+    isFolder.value = true;
     handleFileUpload(items);
   }
 }
 
 function handleFileUpload(file) {
   console.log("file", file);
-  passedFile.value = file;
+  passedFile.value = [];
+  passedFile.value.push(file);
 }
 
 function setQPagetoFull(offset) {

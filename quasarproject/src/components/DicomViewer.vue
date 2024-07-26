@@ -28,7 +28,9 @@ const el = ref();
 let viewport;
 const toolGroupId = "myToolGroup";
 let toolGroup;
-
+let imgIds = [];
+let tags = [];
+let isFolder = defineModel<Boolean>("isFolder");
 let dicomTags = defineModel<Array<any>>("dicomTags");
 let file = defineModel("file");
 const firstRender = defineModel("firstRender");
@@ -45,17 +47,29 @@ const { MouseBindings } = csToolsEnums;
 onMounted(async () => {
   await initDemo();
   createCanvas();
-
-  if (file.value) {
-    loadFile(file.value);
+  if (file.value != null) {
+    for (let key of Object.keys(file.value)) {
+      loadFile(file.value[key]);
+    }
   }
 });
 
 watch(
   () => file.value,
   async () => {
+    imgIds = [];
+    tags = [];
+    console.log("files", file.value, isFolder.value);
     if (file.value != null) {
-      loadFile(file.value);
+      if (isFolder.value) {
+        for (let key of Object.keys(file.value[0])) {
+          loadFile(file.value[0][key]);
+        }
+      } else {
+        loadFile(file.value[0]);
+      }
+
+      loadAndViewImage();
     }
   }
 );
@@ -108,9 +122,11 @@ async function createCanvas() {
 
   renderingEngine.enableElement(viewportInput);
   viewport = renderingEngine.getViewport(viewportId);
-  // if (firstRender.value) {
   toolGroup.addViewport(viewportId, renderingEngineId);
-  // }
+
+  el.value.addEventListener("cornerstonenewimage", function (e) {
+    console.log("new image");
+  });
 }
 
 async function onDrop(e) {
@@ -123,7 +139,7 @@ async function onDrop(e) {
 async function loadFile(file) {
   getTags(file);
   const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
-  loadAndViewImage(imageId);
+  imgIds.push(imageId);
 }
 
 function handleDragOver(evt) {
@@ -132,37 +148,48 @@ function handleDragOver(evt) {
   evt.dataTransfer.dropEffect = "copy"; // Explicitly show this is a copy.
 }
 
-async function loadAndViewImage(imageId) {
-  await prefetchMetadataInformation([imageId]);
-  const stack = convertMultiframeImageIds([imageId]);
+async function loadAndViewImage() {
+  await prefetchMetadataInformation(imgIds);
+
+  console.log("imgIds", imgIds);
+  const stack = convertMultiframeImageIds(imgIds);
 
   viewport.setStack(stack).then((img) => {
     viewport.render();
   });
 }
 
+watch(
+  () => cornerstone.EVENTS.STACK_NEW_IMAGE,
+  () => {
+    console.log("new image");
+  }
+);
+
 async function getTags(file) {
-  dicomTags.value = [];
+  let tagItems = [];
   let arrayBuffer = await file.arrayBuffer();
   var options = {
+    TransferSyntaxUID: "1.2.840.10008.1.2.2",
     vrCallback(tag) {
       const formatted = `(${tag.substring(1, 5).toUpperCase()},${tag
         .substring(5, 9)
         .toUpperCase()})`;
-      return !!TAG_DICT[formatted] ? TAG_DICT[formatted].vr : undefined;
+      return !!TAG_DICT[formatted] ? TAG_DICT[formatted].vr : "UN";
     },
   };
+
   let parsedArray = await dicomParser.parseDicom(new Uint8Array(arrayBuffer), options);
   console.log(parsedArray);
 
   let dataset = await dicomParser.explicitDataSetToJS(parsedArray);
   console.log("dataset", dataset);
-  addElementToTagsArray(dataset, 0, true, null);
+  addElementToTagsArray(tagItems, dataset, 0, true, null);
 
-  console.log("dicomTags", dicomTags.value);
+  tags.push(tagItems);
 }
 
-function addElementToTagsArray(dataset, spaces, showable, parent) {
+function addElementToTagsArray(tagItems, dataset, spaces, showable, parent) {
   for (let key of Object.keys(dataset)) {
     const tag =
       "(" +
@@ -185,10 +212,10 @@ function addElementToTagsArray(dataset, spaces, showable, parent) {
         description: TAG_DICT[tag].name,
         value: dataset[key] instanceof Array ? [] : dataset[key],
       };
-      dicomTags.value.push(row);
+      tagItems.push(row);
       if (dataset[key] instanceof Array) {
         for (let i = 0; i < dataset[key].length; i++) {
-          addElementToTagsArray(dataset[key][i], spaces + 4, false, tag);
+          addElementToTagsArray(tagItems, dataset[key][i], spaces + 4, false, tag);
         }
       }
     }
