@@ -58,7 +58,6 @@
       <template v-slot:after>
         <div v-if="show" class="full-width full-height">
           <dicom-viewer
-            v-model:isFolder="isFolder"
             v-model:toolGroup="toolGroup"
             v-model:dicomTags="dicomTags"
             v-model:first-render="firstRender"
@@ -76,8 +75,6 @@ import DicomViewer from "../components/DicomViewer.vue";
 import { computed, ref, watch } from "vue";
 
 //// Variables
-let isFolder = ref(false);
-let ticked = ref([]);
 let treeRef = ref();
 let selected = ref([]);
 let files = ref([]);
@@ -102,7 +99,7 @@ const forceRender = () => {
   firstRender.value = false;
   setTimeout(() => {
     show.value = !show.value;
-  }, 5);
+  }, 1);
 };
 
 //// Watchers
@@ -110,22 +107,21 @@ watch(
   () => splitterModel.value,
   () => {
     forceRender();
-  }
+  },
 );
 
 watch(
   () => dicomTags.value,
   () => {
-    console.log("dicomTags", dicomTags.value);
     tableTags.value = [...dicomTags.value];
-  }
+  },
 );
 
 watch(
   () => files.value,
   () => {
     fileToTree();
-  }
+  },
 );
 
 //// Methods
@@ -144,7 +140,6 @@ function searchForKey(key, root = tree.value) {
 
 function handleSelectedBranch(branch) {
   if (branch.label.includes(".dcm")) {
-    isFolder.value = false;
     handleFileUpload(branch.item);
   } else {
     let items = [];
@@ -153,7 +148,6 @@ function handleSelectedBranch(branch) {
         items.push(branch.children[i].item);
       }
     }
-    isFolder.value = true;
     handleFileUpload(items);
   }
 }

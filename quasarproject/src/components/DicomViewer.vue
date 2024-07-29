@@ -28,10 +28,12 @@ const el = ref();
 let viewport;
 const toolGroupId = "myToolGroup";
 let toolGroup;
+
 let imgIds = [];
 let tags = [];
-let isFolder = defineModel<Boolean>("isFolder");
+
 let dicomTags = defineModel<Array<any>>("dicomTags");
+
 let file = defineModel("file");
 let fileAndImageID = [
   {
@@ -53,40 +55,14 @@ const { MouseBindings } = csToolsEnums;
 onMounted(async () => {
   await initDemo();
   createCanvas();
-  imgIds = [];
-  tags = [];
-  console.log("files", file.value, isFolder.value);
-  if (file.value != null) {
-    if (isFolder.value) {
-      for (let key of Object.keys(file.value[0])) {
-        loadFile(file.value[0][key]);
-      }
-    } else {
-      loadFile(file.value[0]);
-    }
-
-    loadAndViewImage();
-  }
+  fileLoader();
 });
 
 watch(
   () => file.value,
   async () => {
-    imgIds = [];
-    tags = [];
-    console.log("files", file.value, isFolder.value);
-    if (file.value != null) {
-      if (isFolder.value) {
-        for (let key of Object.keys(file.value[0])) {
-          loadFile(file.value[0][key]);
-        }
-      } else {
-        loadFile(file.value[0]);
-      }
-
-      loadAndViewImage();
-    }
-  }
+    fileLoader();
+  },
 );
 
 onUnmounted(() => {
@@ -158,9 +134,9 @@ async function onDrop(e) {
 }
 
 async function loadFile(file) {
-  const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
-  fileAndImageID.push({ file: file, imageId: imageId });
-  imgIds.push(imageId);
+  let imageID = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
+  imgIds.push(imageID);
+  fileAndImageID.push({ file: file, imageId: imageID });
 }
 
 function handleDragOver(evt) {
@@ -169,22 +145,45 @@ function handleDragOver(evt) {
   evt.dataTransfer.dropEffect = "copy"; // Explicitly show this is a copy.
 }
 
+async function fileLoader() {
+  tags = [];
+  fileAndImageID = [];
+  imgIds = [];
+  if (file.value[0] != null) {
+    if (file.value[0] instanceof Array) {
+      for (let i = 0; i < file.value[0].length; i++) {
+        await loadFile(file.value[0][i]);
+      }
+    } else {
+      await loadFile(file.value[0]);
+    }
+    loadAndViewImage();
+  }
+}
+
 async function loadAndViewImage() {
-  await prefetchMetadataInformation(imgIds);
-
+  let stack = [];
   console.log("imgIds", imgIds);
-  const stack = convertMultiframeImageIds(imgIds);
+  if (imgIds == null) return;
 
-  viewport.setStack(stack).then((img) => {
+  await prefetchMetadataInformation(imgIds);
+  stack = await convertMultiframeImageIds(imgIds);
+
+  viewport.setStack(stack).then(() => {
     viewport.render();
   });
 
-  viewport.element.addEventListener(cornerstone.EVENTS.STACK_NEW_IMAGE, async (e) => {
-    const imageId = e.detail.image.imageId;
-    const file = fileAndImageID.find((item) => item.imageId === imageId).file;
-    await getTags(file);
-    // dicomTags.value = tags;
-  });
+  viewport.element.addEventListener(
+    cornerstone.EVENTS.STACK_NEW_IMAGE,
+    async (e) => {
+      if (e.detail.image.imageId.split("&frame").length > 1) return;
+
+      const imageId = e.detail.image.imageId.split("&frame")[0];
+
+      const file = fileAndImageID.find((item) => item.imageId === imageId).file;
+      getTags(file);
+    },
+  );
 }
 
 async function getTags(file) {
@@ -200,11 +199,11 @@ async function getTags(file) {
     },
   };
 
-  let parsedArray = await dicomParser.parseDicom(new Uint8Array(arrayBuffer), options);
-  console.log(parsedArray);
-
+  let parsedArray = await dicomParser.parseDicom(
+    new Uint8Array(arrayBuffer),
+    options,
+  );
   let dataset = await dicomParser.explicitDataSetToJS(parsedArray);
-  console.log("dataset", dataset);
   addElementToTagsArray(tagItems, dataset, 0, true, null);
   dicomTags.value = tagItems;
 }
@@ -222,7 +221,9 @@ function addElementToTagsArray(tagItems, dataset, spaces, showable, parent) {
         tagName:
           "_".repeat(spaces) +
           TAG_DICT[tag].tag +
-          (dataset[key] instanceof Array && dataset[key].length > 0 ? " >" : ""),
+          (dataset[key] instanceof Array && dataset[key].length > 0
+            ? " >"
+            : ""),
         tag: TAG_DICT[tag].tag,
         vr: TAG_DICT[tag].vr,
         vm: TAG_DICT[tag].vm,
@@ -235,7 +236,13 @@ function addElementToTagsArray(tagItems, dataset, spaces, showable, parent) {
       tagItems.push(row);
       if (dataset[key] instanceof Array) {
         for (let i = 0; i < dataset[key].length; i++) {
-          addElementToTagsArray(tagItems, dataset[key][i], spaces + 4, false, tag);
+          addElementToTagsArray(
+            tagItems,
+            dataset[key][i],
+            spaces + 4,
+            false,
+            tag,
+          );
         }
       }
     }

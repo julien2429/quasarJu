@@ -1,13 +1,12 @@
 <template>
   <q-table
     bordered
-    style="height: 100%"
     :title="props.title"
     :columns="columns"
     :rows="filteredRows"
     :loading="props.loading"
     separator="cell"
-    class="my-sticky-virtscroll-table"
+    class="full-height"
   >
     <template v-slot:body="props">
       <q-tr :props="props">
@@ -48,7 +47,9 @@
             flat
             dense
             :style="
-              filter[col.name] ? 'background-color: #A7A7A7' : 'background-color: #dadada'
+              filter[col.name]
+                ? 'background-color: #A7A7A7'
+                : 'background-color: #dadada'
             "
             ><q-icon size="sm" name="search"></q-icon>
             <q-menu>
@@ -84,7 +85,10 @@ const isEditable = props.isEditable;
 const columns = computed(() => {
   const cols = [];
   for (const key in props.rows[0]) {
-    if (props.excludedColumns !== undefined && props.excludedColumns.includes(key))
+    if (
+      props.excludedColumns !== undefined &&
+      props.excludedColumns.includes(key)
+    )
       continue;
     cols.push({
       name: key,
@@ -121,7 +125,7 @@ const filteredRows = computed(() =>
             row[key].toLowerCase().includes(filter[key].toLowerCase()));
     }
     return state;
-  })
+  }),
 );
 </script>
 
@@ -138,11 +142,6 @@ const filteredRows = computed(() =>
 /* .slide-fade-leave-active below version 2.1.8 */ {
   transform: translateX(10px);
   opacity: 0;
-}
-
-.my-sticky-virtscroll-table :deep(.child) {
-  /* height or max-height is important */
-  height: calc(100vh - 150px);
 }
 
 thead tr:first-child th {
