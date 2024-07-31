@@ -1,18 +1,25 @@
-import { metaData } from '@cornerstonejs/core';
-import cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
+import { metaData } from "@cornerstonejs/core";
+import cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
 /**
  * preloads imageIds metadata in memory
  **/
 async function prefetchMetadataInformation(imageIdsToPrefetch) {
   for (let i = 0; i < imageIdsToPrefetch.length; i++) {
-    await cornerstoneDICOMImageLoader.wadouri.loadImage(imageIdsToPrefetch[i])
-      .promise;
+    console.log(cornerstoneDICOMImageLoader.wadouri);
+    var options = {
+      TransferSyntaxUID: "1.2.840.10008.1.2.1",
+    };
+
+    await cornerstoneDICOMImageLoader.wadouri.loadImage(
+      imageIdsToPrefetch[i],
+      options,
+    ).promise;
   }
 }
 
 function getFrameInformation(imageId) {
-  if (imageId.includes('wadors:')) {
-    const frameIndex = imageId.indexOf('/frames/');
+  if (imageId.includes("wadors:")) {
+    const frameIndex = imageId.indexOf("/frames/");
     const imageIdFrameless =
       frameIndex > 0 ? imageId.slice(0, frameIndex + 8) : imageId;
     return {
@@ -20,11 +27,11 @@ function getFrameInformation(imageId) {
       imageIdFrameless,
     };
   } else {
-    const frameIndex = imageId.indexOf('&frame=');
+    const frameIndex = imageId.indexOf("&frame=");
     let imageIdFrameless =
       frameIndex > 0 ? imageId.slice(0, frameIndex + 7) : imageId;
-    if (!imageIdFrameless.includes('&frame=')) {
-      imageIdFrameless = imageIdFrameless + '&frame=';
+    if (!imageIdFrameless.includes("&frame=")) {
+      imageIdFrameless = imageIdFrameless + "&frame=";
     }
     return {
       frameIndex,
@@ -44,7 +51,7 @@ function convertMultiframeImageIds(imageIds) {
   const newImageIds = [];
   imageIds.forEach((imageId) => {
     const { imageIdFrameless } = getFrameInformation(imageId);
-    const instanceMetaData = metaData.get('multiframeModule', imageId);
+    const instanceMetaData = metaData.get("multiframeModule", imageId);
     if (
       instanceMetaData &&
       instanceMetaData.NumberOfFrames &&

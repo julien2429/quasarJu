@@ -12,7 +12,7 @@
                 :editable-rows="['value']"
                 :rows="filteredTags"
                 :excludedColumns="excludedColumns"
-                @row-click="
+                @row-click.stop="
                   (evt, row, index) => {
                     row.showChildren = !row.showChildren;
                     changeShowableState(row.tag, row.showChildren);
@@ -56,14 +56,13 @@
       </template>
 
       <template v-slot:after>
-        <div v-if="show" class="full-width full-height">
-          <dicom-viewer
-            v-model:toolGroup="toolGroup"
-            v-model:dicomTags="dicomTags"
-            v-model:first-render="firstRender"
-            v-model:file="passedFile"
-          ></dicom-viewer>
-        </div>
+        <dicom-viewer
+          v-model:splitterValue="splitterModel"
+          v-model:toolGroup="toolGroup"
+          v-model:dicomTags="dicomTags"
+          v-model:first-render="firstRender"
+          v-model:file="passedFile"
+        ></dicom-viewer>
       </template>
     </q-splitter>
   </q-page>
@@ -94,11 +93,11 @@ const filteredTags = computed(() => {
 });
 
 const forceRender = () => {
-  show.value = !show.value;
+  // show.value = !show.value;
 
   firstRender.value = false;
   setTimeout(() => {
-    show.value = !show.value;
+    // show.value = !show.value;
   }, 1);
 };
 

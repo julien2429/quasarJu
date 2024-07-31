@@ -1,12 +1,13 @@
 <template>
   <div
+    @resize="resizeCanvas"
     @click.right.prevent
     @drop.prevent="onDrop"
     @dragenter.prevent
     @dragover.prevent="handleDragOver"
     @click.middle.prevent
     ref="el"
-    class="full-height full-width"
+    style="width: 100%; height: 100%"
   ></div>
 </template>
 
@@ -24,10 +25,14 @@ import initDemo from "src/utils/initDemo";
 import dicomParser from "dicom-parser";
 import { TAG_DICT } from "src/utils/dataDictionary";
 
+const splitterValue = defineModel("splitterValue");
+
 const el = ref();
-let viewport;
+
 const toolGroupId = "myToolGroup";
 let toolGroup;
+
+let viewport;
 
 let imgIds = [];
 let tags = [];
@@ -41,6 +46,7 @@ let fileAndImageID = [
     imageId: null,
   },
 ];
+
 const firstRender = defineModel("firstRender");
 const {
   PanTool,
@@ -62,6 +68,13 @@ watch(
   () => file.value,
   async () => {
     fileLoader();
+  },
+);
+
+watch(
+  () => splitterValue.value,
+  () => {
+    resizeCanvas();
   },
 );
 
@@ -124,6 +137,15 @@ async function createCanvas() {
   renderingEngine.enableElement(viewportInput);
   viewport = renderingEngine.getViewport(viewportId);
   toolGroup.addViewport(viewportId, renderingEngineId);
+
+  console.log(viewport);
+}
+
+function resizeCanvas() {
+  let renderingEngine = cornerstone.getRenderingEngine("myRenderingEngine");
+  renderingEngine.resize(true, true);
+  viewport.resize(viewport.canvas, true);
+  viewport.resize(viewport.element, true);
 }
 
 async function onDrop(e) {
@@ -163,23 +185,17 @@ async function fileLoader() {
 
 async function loadAndViewImage() {
   let stack = [];
-  console.log("imgIds", imgIds);
   if (imgIds == null) return;
-
   await prefetchMetadataInformation(imgIds);
   stack = await convertMultiframeImageIds(imgIds);
-
   viewport.setStack(stack).then(() => {
     viewport.render();
   });
-
   viewport.element.addEventListener(
     cornerstone.EVENTS.STACK_NEW_IMAGE,
     async (e) => {
       if (e.detail.image.imageId.split("&frame").length > 1) return;
-
       const imageId = e.detail.image.imageId.split("&frame")[0];
-
       const file = fileAndImageID.find((item) => item.imageId === imageId).file;
       getTags(file);
     },

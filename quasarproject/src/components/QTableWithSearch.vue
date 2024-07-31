@@ -21,7 +21,6 @@
               v-slot="scope"
             >
               <q-input
-                type="number"
                 v-model="scope.value"
                 autofocus
                 hint="Use buttons to close"

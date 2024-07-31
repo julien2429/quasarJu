@@ -1,8 +1,8 @@
-import dicomParser from 'dicom-parser';
-import * as cornerstone from '@cornerstonejs/core';
-import * as cornerstoneTools from '@cornerstonejs/tools';
-import cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
-
+import dicomParser from "dicom-parser";
+import * as cornerstone from "@cornerstonejs/core";
+import * as cornerstoneTools from "@cornerstonejs/tools";
+import cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
+import { TAG_DICT } from "src/utils/dataDictionary";
 window.cornerstone = cornerstone;
 window.cornerstoneTools = cornerstoneTools;
 const { preferSizeOverAccuracy, useNorm16Texture } =
@@ -11,8 +11,14 @@ const { preferSizeOverAccuracy, useNorm16Texture } =
 export default function initCornerstoneDICOMImageLoader() {
   cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
   cornerstoneDICOMImageLoader.external.dicomParser = dicomParser;
+
+  console.log("cornerstoneDICOMImageLoader", cornerstoneDICOMImageLoader);
+  console.log(
+    "cornerstoneDICOMImageLoader.external.dicomParser",
+    cornerstoneDICOMImageLoader.external.dicomParser,
+  );
+
   cornerstoneDICOMImageLoader.configure({
-    useWebWorkers: true,
     decodeConfig: {
       convertFloatPixelDataToInt: false,
       use16BitDataType: preferSizeOverAccuracy || useNorm16Texture,
