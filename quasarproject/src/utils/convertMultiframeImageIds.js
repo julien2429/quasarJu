@@ -3,11 +3,11 @@ import cornerstoneDICOMImageLoader from "@cornerstonejs/dicom-image-loader";
 /**
  * preloads imageIds metadata in memory
  **/
+
 async function prefetchMetadataInformation(imageIdsToPrefetch) {
   for (let i = 0; i < imageIdsToPrefetch.length; i++) {
-    console.log(cornerstoneDICOMImageLoader.wadouri);
     var options = {
-      TransferSyntaxUID: "1.2.840.10008.1.2.1",
+      useNativeDataType: false,
     };
 
     await cornerstoneDICOMImageLoader.wadouri.loadImage(

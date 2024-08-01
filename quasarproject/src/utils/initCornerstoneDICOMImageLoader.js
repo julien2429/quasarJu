@@ -11,14 +11,8 @@ const { preferSizeOverAccuracy, useNorm16Texture } =
 export default function initCornerstoneDICOMImageLoader() {
   cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
   cornerstoneDICOMImageLoader.external.dicomParser = dicomParser;
-
-  console.log("cornerstoneDICOMImageLoader", cornerstoneDICOMImageLoader);
-  console.log(
-    "cornerstoneDICOMImageLoader.external.dicomParser",
-    cornerstoneDICOMImageLoader.external.dicomParser,
-  );
-
   cornerstoneDICOMImageLoader.configure({
+    strict: false,
     decodeConfig: {
       convertFloatPixelDataToInt: false,
       use16BitDataType: preferSizeOverAccuracy || useNorm16Texture,
@@ -36,7 +30,7 @@ export default function initCornerstoneDICOMImageLoader() {
     startWebWorkersOnDemand: false,
     taskConfiguration: {
       decodeTask: {
-        initializeCodecsOnStartup: false,
+        initializeCodecsOnStartup: true,
         strict: false,
       },
     },

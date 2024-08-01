@@ -6,12 +6,18 @@
     @dragenter.prevent
     @dragover.prevent="handleDragOver"
     @click.middle.prevent
+    :loading="true"
     ref="el"
     style="width: 100%; height: 100%"
-  ></div>
+  >
+    <q-inner-loading :showing="loading">
+      <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+    </q-inner-loading>
+  </div>
 </template>
 
 <script setup lang="ts">
+/// IMPORTS
 import { onUnmounted, ref, watch } from "vue";
 import * as cornerstone from "@cornerstonejs/core";
 import * as cornerstoneTools from "@cornerstonejs/tools";
@@ -24,21 +30,21 @@ import {
 import initDemo from "src/utils/initDemo";
 import dicomParser from "dicom-parser";
 import { TAG_DICT } from "src/utils/dataDictionary";
+import { useQuasar } from "quasar";
+
+/// VARIABLES
 
 const splitterValue = defineModel("splitterValue");
-
 const el = ref();
-
 const toolGroupId = "myToolGroup";
+let $q = useQuasar();
+let currentFile = ref(null);
+let loading = ref(false);
 let toolGroup;
-
 let viewport;
-
 let imgIds = [];
 let tags = [];
-
 let dicomTags = defineModel<Array<any>>("dicomTags");
-
 let file = defineModel("file");
 let fileAndImageID = [
   {
@@ -46,8 +52,6 @@ let fileAndImageID = [
     imageId: null,
   },
 ];
-
-const firstRender = defineModel("firstRender");
 const {
   PanTool,
   WindowLevelTool,
@@ -58,16 +62,37 @@ const {
 } = cornerstoneTools;
 const { MouseBindings } = csToolsEnums;
 
+///// WATCHERS & LIFECYCLE HOOKS
 onMounted(async () => {
+  loading.value = true;
   await initDemo();
   createCanvas();
   fileLoader();
+  loading.value = false;
 });
+
+watch(
+  () => loading.value,
+  () => {
+    if (loading.value) {
+      $q.loading.show();
+    } else {
+      $q.loading.hide();
+    }
+  },
+);
 
 watch(
   () => file.value,
   async () => {
-    fileLoader();
+    loading.value = true;
+    try {
+      await fileLoader();
+    } catch (e) {
+      console.log(e);
+    } finally {
+      loading.value = false;
+    }
   },
 );
 
@@ -86,6 +111,8 @@ onUnmounted(() => {
 
   toolGroup = [];
 });
+
+/// FUNCTIONS
 
 async function createCanvas() {
   cornerstoneTools.addTool(PanTool);
@@ -151,8 +178,8 @@ function resizeCanvas() {
 async function onDrop(e) {
   e.preventDefault();
   const files = e.dataTransfer.files;
-  file.value = files[0];
-  loadFile(file);
+  file.value[0] = files[0];
+  fileLoader();
 }
 
 async function loadFile(file) {
@@ -177,9 +204,10 @@ async function fileLoader() {
         await loadFile(file.value[0][i]);
       }
     } else {
+      getTags(file.value[0]);
       await loadFile(file.value[0]);
     }
-    loadAndViewImage();
+    await loadAndViewImage();
   }
 }
 
@@ -191,13 +219,20 @@ async function loadAndViewImage() {
   viewport.setStack(stack).then(() => {
     viewport.render();
   });
+
   viewport.element.addEventListener(
     cornerstone.EVENTS.STACK_NEW_IMAGE,
     async (e) => {
-      if (e.detail.image.imageId.split("&frame").length > 1) return;
       const imageId = e.detail.image.imageId.split("&frame")[0];
       const file = fileAndImageID.find((item) => item.imageId === imageId).file;
-      getTags(file);
+      try {
+        if (currentFile.value !== file) {
+          currentFile.value = file;
+          await getTags(file);
+        }
+      } catch (e) {
+        console.log(e);
+      }
     },
   );
 }
@@ -206,7 +241,7 @@ async function getTags(file) {
   let tagItems = [];
   let arrayBuffer = await file.arrayBuffer();
   var options = {
-    TransferSyntaxUID: "1.2.840.10008.1.2.2",
+    TransferSyntaxUID: "1.2.840.10008.1.2.1",
     vrCallback(tag) {
       const formatted = `(${tag.substring(1, 5).toUpperCase()},${tag
         .substring(5, 9)
@@ -219,6 +254,7 @@ async function getTags(file) {
     new Uint8Array(arrayBuffer),
     options,
   );
+
   let dataset = await dicomParser.explicitDataSetToJS(parsedArray);
   addElementToTagsArray(tagItems, dataset, 0, true, null);
   dicomTags.value = tagItems;
@@ -235,7 +271,8 @@ function addElementToTagsArray(tagItems, dataset, spaces, showable, parent) {
     if (TAG_DICT[tag]) {
       let row = {
         tagName:
-          "_".repeat(spaces) +
+          "-".repeat(spaces) +
+          " " +
           TAG_DICT[tag].tag +
           (dataset[key] instanceof Array && dataset[key].length > 0
             ? " >"

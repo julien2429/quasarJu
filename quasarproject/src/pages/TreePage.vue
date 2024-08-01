@@ -12,8 +12,8 @@
             title="Pacients"
             :rows="pacientsFetched"
             :loading="loading1"
-            @row-click="
-              (evt, row, index) => {
+            @on-row-click="
+              (row) => {
                 if (selectedPacient !== row.DcmPatientId) {
                   selectedPacient = row.DcmPatientId;
                   filteredStudies = [];
@@ -34,8 +34,8 @@
                 title="Studies"
                 :rows="filteredStudies"
                 :loading="loading2"
-                @row-click="
-                  (evt, row, index) => {
+                @on-row-click="
+                  (row) => {
                     selectedStudy = row.StudyId;
                     fetchDetails();
                   }
@@ -83,7 +83,7 @@ watch(
   () => selectedPacient.value,
   () => {
     selectedStudy.value = null;
-  }
+  },
 );
 
 function handleWindowSizeChange() {
@@ -6905,7 +6905,7 @@ function fetchStudies() {
   filteredDetails.value = [];
   setTimeout(() => {
     filteredStudies.value = studies.filter(
-      (study) => study.PatientId === selectedPacient.value
+      (study) => study.PatientId === selectedPacient.value,
     );
     loading2.value = false;
   }, 1000);
@@ -6915,7 +6915,7 @@ function fetchDetails() {
   filteredDetails.value = [];
   setTimeout(() => {
     (filteredDetails.value = details.filter(
-      (detail) => detail.StudyId === selectedStudy.value
+      (detail) => detail.StudyId === selectedStudy.value,
     )),
       (loading3.value = false);
   }, 1000);

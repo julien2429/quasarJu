@@ -6,12 +6,24 @@
     :rows="filteredRows"
     :loading="props.loading"
     separator="cell"
+    virtual-scroll
+    v-model:pagination="pagination"
+    :rows-per-page-options="[0]"
     class="full-height"
   >
     <template v-slot:body="props">
       <q-tr :props="props">
-        <q-td v-for="col in columns" :key="col.name" :props="props">
-          <div v-if="isEditable && rowContains(editableRows, col.name)">
+        <q-td
+          style="cursor: pointer"
+          v-for="col in columns"
+          :key="col.name"
+          :props="props"
+          @click="onRowClick(props.row)"
+        >
+          <div
+            @click.stop
+            v-if="isEditable && rowContains(editableRows, col.name)"
+          >
             {{ props.row[col.name] }}
             <q-popup-edit
               v-model="props.row[col.name]"
@@ -27,6 +39,7 @@
               ></q-input>
             </q-popup-edit>
           </div>
+
           <div v-else>
             {{ props.row[col.name] }}
           </div>
@@ -69,7 +82,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
+const emit = defineEmits(["onRowClick"]);
+let pagination = ref({
+  rowsPerPage: 0,
+});
+function onRowClick(row) {
+  emit("onRowClick", row);
+}
+
 const props = defineProps([
   "title",
   "rows",
@@ -78,6 +99,7 @@ const props = defineProps([
   "isEditable",
   "editableRows",
 ]);
+
 const filter = reactive({});
 const editableRows = props.editableRows;
 const isEditable = props.isEditable;

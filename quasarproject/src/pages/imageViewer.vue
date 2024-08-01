@@ -8,13 +8,14 @@
               <q-table-with-search
                 dense
                 title="Tag Data"
-                :is-editable="true"
+                :is-editable="isEditable"
                 :editable-rows="['value']"
                 :rows="filteredTags"
                 :excludedColumns="excludedColumns"
-                @row-click.stop="
-                  (evt, row, index) => {
+                @on-row-click="
+                  (row) => {
                     row.showChildren = !row.showChildren;
+                    row.tagName = changeArrow(row.tagName);
                     changeShowableState(row.tag, row.showChildren);
                   }
                 "
@@ -60,7 +61,6 @@
           v-model:splitterValue="splitterModel"
           v-model:toolGroup="toolGroup"
           v-model:dicomTags="dicomTags"
-          v-model:first-render="firstRender"
           v-model:file="passedFile"
         ></dicom-viewer>
       </template>
@@ -74,6 +74,7 @@ import DicomViewer from "../components/DicomViewer.vue";
 import { computed, ref, watch } from "vue";
 
 //// Variables
+let isEditable = ref(true);
 let treeRef = ref();
 let selected = ref([]);
 let files = ref([]);
@@ -81,33 +82,16 @@ let dicomTags = ref([]);
 let tableTags = ref([]);
 let toolGroup = ref([]);
 let tree = ref([]);
-let excludedColumns = ref(["tag", "showable", "showChildren", "parent"]);
-const firstRender = ref(true);
-const show = ref(true);
 const passedFile = ref({});
 const splitterModel = ref(50);
 const leftSpliterModel = ref(50);
+let excludedColumns = ref(["tag", "showable", "showChildren", "parent"]);
 
 const filteredTags = computed(() => {
   return dicomTags.value.filter((tag) => tag.showable);
 });
 
-const forceRender = () => {
-  // show.value = !show.value;
-
-  firstRender.value = false;
-  setTimeout(() => {
-    // show.value = !show.value;
-  }, 1);
-};
-
 //// Watchers
-watch(
-  () => splitterModel.value,
-  () => {
-    forceRender();
-  },
-);
 
 watch(
   () => dicomTags.value,
@@ -172,10 +156,25 @@ function changeShowableState(tag, showChildren) {
     for (let key in dicomTags.value) {
       if (dicomTags.value[key].parent === tag) {
         dicomTags.value[key].showable = false;
-        if (dicomTags.value[key].showChildren)
+
+        if (dicomTags.value[key].showChildren) {
           changeShowableState(dicomTags.value[key].tag, false);
+          dicomTags.value[key].showChildren = false;
+          dicomTags.value[key].tagName = changeArrow(
+            dicomTags.value[key].tagName,
+          );
+        }
       }
     }
+  }
+}
+
+function changeArrow(tagName) {
+  if (tagName.includes(">")) {
+    console.log("tagName", tagName);
+    return tagName.replace(">", "v");
+  } else {
+    return tagName.replace("v", ">");
   }
 }
 
